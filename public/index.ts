@@ -272,11 +272,12 @@ const handlePromptSubmission = () => {
             }
             imageServiceClient.editImage(promptArea.value).then((response) => {
                 const data = response.data
+                inputCanvasHandler.setImage(data)
                 const outputImg = getById('outputImage') as HTMLImageElement
-                outputImg.src = data
-                outputImg.onload = () => {
-                    alert('Finished generating new image')
-                }
+                // outputImg.src = data
+                // outputImg.onload = () => {
+                //     alert('Finished generating new image')
+                // }
             })
         }
     }

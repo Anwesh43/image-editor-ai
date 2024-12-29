@@ -1,6 +1,5 @@
 import { createReadStream, Stats, statSync, writeFileSync } from "fs"
 import { OpenAI } from 'openai'
-import { Images } from "openai/resources"
 
 const getFileSize = (imagePath: string) => {
     const fileData: Stats = statSync(imagePath)
