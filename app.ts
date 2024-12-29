@@ -11,14 +11,14 @@ const app: Express = express()
 
 const imageService = getInstance()
 
-app.use(bodyParser.json())
+app.use(bodyParser.json({ limit: '50mb' }))
 
 app.use(express.static(path.join(__dirname, 'public')))
 
 app.post("/saveImage", (req: express.Request, res: express.Response) => {
     const imageData: string = req.body['imageData']
     try {
-        const fileName = imageService.saveImage(imageData)
+        const fileName = imageService.saveImage(imageData.split(",")[1])
         res.status(200).json({
             status: 'success',
             fileName,
@@ -36,6 +36,7 @@ app.post('/editImage', async (req: express.Request, res: express.Response) => {
     const maskPath = req.body['maskPath']
     const prompt = req.body["prompt"]
     try {
+        console.log("STARTING_TO_GENERATE_IMAGE")
         const response = await imageService.generateEdittedImage(imagePath, maskPath, prompt)
         console.log("RESPONSE", response.data)
         res.status(200).json({
@@ -43,6 +44,9 @@ app.post('/editImage', async (req: express.Request, res: express.Response) => {
         })
     } catch (error) {
         console.error(error)
+        res.status(500).json({
+            status: "error"
+        })
 
     }
 })
