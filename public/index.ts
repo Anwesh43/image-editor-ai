@@ -1,5 +1,61 @@
 
 
+
+
+
+class ImagePathStore {
+
+    originalImage: string
+    maskedImage: string
+
+    setOriginalImage(image: string) {
+        this.originalImage = image
+    }
+
+    setMaskedImage(image: string) {
+        this.maskedImage = image
+    }
+}
+
+const imagePathStore = new ImagePathStore()
+
+class ImageServiceClient {
+
+    async saveImage(imageData: string) {
+        return fetch('http://localhost:5000/saveImage', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                'accept': 'application/json'
+            },
+            body: JSON.stringify({
+                imageData
+            })
+        }).then((res) => res.json())
+    }
+
+    async editImage(prompt: string) {
+        console.log("REQ", {
+            prompt,
+            imagePath: imagePathStore.originalImage,
+            maskPath: imagePathStore.maskedImage
+        })
+        return fetch('http://localhost:5000/editImage', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                'accept': 'application/json'
+            },
+            body: JSON.stringify({
+                prompt,
+                imagePath: imagePathStore.originalImage,
+                maskPath: imagePathStore.maskedImage
+            })
+        }).then((res) => res.json())
+    }
+}
+const imageServiceClient = new ImageServiceClient()
+
 const getById = (id: string) => document.getElementById(id)
 
 interface HTMLCustomFileInput extends HTMLInputElement {
@@ -133,6 +189,11 @@ class InputCanvasHandler {
             this.imageLoaded = true
             this.maskPath.reset()
             this.draw()
+            imageServiceClient.saveImage(this.canvas.toDataURL('image/png', 0.3)).then((data) => {
+                console.log(data)
+                console.log(data.fileName)
+                imagePathStore.setOriginalImage(data.fileName)
+            })
         }
     }
 
@@ -165,7 +226,13 @@ class InputCanvasHandler {
                 this.maskPath.end(new Point(e.offsetX, e.offsetY))
                 this.draw()
                 if (this.context) {
-                    this.maskPath.createMask(this.context, this.canvas.width, this.canvas.height)
+                    //this.maskPath.createMask(this.context, this.canvas.width, this.canvas.height)
+
+                    imageServiceClient.saveImage(this.canvas.toDataURL('image/png', 0.3)).then((data) => {
+                        console.log(data)
+                        console.log(data.fileName)
+                        imagePathStore.setMaskedImage(data.fileName)
+                    })
                     console.log("NEW_PIXEL", this.context.getImageData(0, 0, this.canvas.width, this.canvas.height).data)
                 }
 
@@ -185,5 +252,34 @@ handleFileReader((data: string | ArrayBuffer | null) => {
     if (data && typeof data === 'string') {
         console.log("Setting image")
         inputCanvasHandler.setImage(data)
+
+        // imageServiceClient.saveImage(data).then((data) => {
+        //     console.log(data)
+        //     console.log(data.fileName)
+        //     imagePathStore.setOriginalImage(data.fileName)
+        // })
     }
 })
+
+const handlePromptSubmission = () => {
+    const promptArea = getById('promptArea') as HTMLTextAreaElement
+    const btn = getById('submit')
+    if (btn) {
+        btn.onclick = async () => {
+            if (!promptArea.value) {
+                alert("Please Enter a Prompt")
+                return
+            }
+            imageServiceClient.editImage(promptArea.value).then((response) => {
+                const data = response.data
+                const outputImg = getById('outputImage') as HTMLImageElement
+                outputImg.src = data
+                outputImg.onload = () => {
+                    alert('Finished generating new image')
+                }
+            })
+        }
+    }
+}
+
+handlePromptSubmission()
