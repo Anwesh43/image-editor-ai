@@ -20,7 +20,7 @@ class ImageService {
             image: createReadStream(imagePath),
             mask: createReadStream(maskPath),
             n: 1,
-            size: '1024x1024',
+            size: '512x512',
             prompt,
         })
         return {
@@ -30,4 +30,7 @@ class ImageService {
     }
 }
 
-export default new ImageService()
+export const getInstance: () => ImageService = (): ImageService => {
+    return new ImageService()
+}
+

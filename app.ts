@@ -1,12 +1,15 @@
 import { config } from "dotenv";
 import express, { Express } from 'express'
-import imageService from './imageService'
+import { getInstance } from './imageService'
 import bodyParser from 'body-parser'
 import path from 'path'
+
 config()
 
+console.log(process.env)
 const app: Express = express()
 
+const imageService = getInstance()
 
 app.use(bodyParser.json())
 
